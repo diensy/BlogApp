@@ -47,10 +47,6 @@ exports.getAllPosts = async (req, res) => {
 
 
 
-
-
-
-
 exports.getPostById = async (req, res) => {
     try {
         const postId = req.params.postId;
@@ -121,6 +117,7 @@ exports.likePost = async (req, res) => {
         if (post.likes.includes(userId)) {
             return res.status(400).json({ message: 'You have already liked this post' });
         }
+        
 
         post.likes.push(userId);
         await post.save();
