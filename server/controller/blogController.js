@@ -101,77 +101,6 @@ exports.deletePost = async (req, res) => {
     }
 };
 
-
-
-exports.likePost = async (req, res) => {
-    try {
-        const postId = req.params.postId;
-        const userId = req.user.userId;
-
-        const post = await Post.findById(postId);
-
-        if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
-        }
-
-        if (post.likes.includes(userId)) {
-            return res.status(400).json({ message: 'You have already liked this post' });
-        }
-        
-
-        post.likes.push(userId);
-        await post.save();
-
-        res.status(200).json({ message: 'Post liked successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.dislikePost = async (req, res) => {
-    try {
-        const postId = req.params.postId;
-        const userId = req.user.userId;
-
-        const post = await Post.findById(postId);
-
-        if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
-        }
-
-        if (post.dislikes.includes(userId)) {
-            return res.status(400).json({ message: 'You have already disliked this post' });
-        }
-
-        post.dislikes.push(userId);
-        await post.save();
-
-        res.status(200).json({ message: 'Post disliked successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.commentOnPost = async (req, res) => {
-    try {
-        const postId = req.params.postId;
-        const userId = req.user.userId;
-        const { content } = req.body;
-        const post = await Post.findById(postId);
-        if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
-        }
-        post.comments.push({
-            content,
-            author: userId,
-        });
-        await post.save();
-        res.status(200).json({ message: 'Comment added successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
 exports.getUserAllPosts = async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -182,3 +111,69 @@ exports.getUserAllPosts = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+// Like post
+exports.likePost = async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const post = await Post.findById(req.params.postId);
+  
+      if (!post) return res.status(404).json({ message: 'Post not found' });
+  
+      // Remove dislike if exists
+      post.dislikes = post.dislikes.filter(id => id.toString() !== userId);
+  
+      if (post.likes.includes(userId)) {
+        post.likes = post.likes.filter(id => id.toString() !== userId); // Unlike
+      } else {
+        post.likes.push(userId);
+      }
+  
+      await post.save();
+      res.json({ message: 'Post liked/unliked' });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  };
+  
+  // Dislike post
+  exports.dislikePost = async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const post = await Post.findById(req.params.postId);
+  
+      if (!post) return res.status(404).json({ message: 'Post not found' });
+  
+      // Remove like if exists
+      post.likes = post.likes.filter(id => id.toString() !== userId);
+  
+      if (post.dislikes.includes(userId)) {
+        post.dislikes = post.dislikes.filter(id => id.toString() !== userId); // Remove dislike
+      } else {
+        post.dislikes.push(userId);
+      }
+  
+      await post.save();
+      res.json({ message: 'Post disliked/undisliked' });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  };
+  
+  // Add comment
+  exports.addComment = async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const { content } = req.body;
+  
+      const post = await Post.findById(req.params.postId);
+      if (!post) return res.status(404).json({ message: 'Post not found' });
+  
+      post.comments.push({ author: userId, content });
+
+      await post.save();
+  
+      res.json({ message: 'Comment added' });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  };

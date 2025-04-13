@@ -20,15 +20,14 @@ router.put('/posts/:postId', authMiddleware, postController.editPost);
 
 // Delete a post
 router.delete('/posts/:postId', authMiddleware, postController.deletePost);
-
 // Like a post
 router.post('/posts/:postId/like', authMiddleware, postController.likePost);
 
 // Dislike a post
 router.post('/posts/:postId/dislike', authMiddleware, postController.dislikePost);
 
-// Comment on a post
-router.post('/posts/:postId/comment', authMiddleware, postController.commentOnPost);
+// Add comment
+router.post('/posts/:postId/comment', authMiddleware, postController.addComment);
 
 
 module.exports = router;

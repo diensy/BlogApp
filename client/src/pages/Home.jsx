@@ -24,9 +24,7 @@ export default function Home() {
   const baseUrl = process.env.REACT_APP_BASE_URL;
 
   // Function to get the token from localStorage
-  const getAuthToken = () => {
-    return localStorage.getItem('token');
-  };
+  const getAuthToken = localStorage.getItem('token');
   
 
   useEffect(() => {
@@ -35,11 +33,11 @@ export default function Home() {
 
   const getPosts = async () => {
     try {
-      const token = getAuthToken(); 
+      
       const response = await axios.get(`${baseUrl}/posts`, {
         params: { query: searchInput },
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getAuthToken}`,
         },
       });
       setPosts(response?.data);
@@ -95,10 +93,10 @@ export default function Home() {
 
   const handleLike = async (id) => {
     try {
-      const token = getAuthToken();
+     
       await axios.post(`${baseUrl}/posts/${id}/like`, null, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getAuthToken}`,
         },
       });
       getPosts();
@@ -109,10 +107,10 @@ export default function Home() {
 
   const handleDislike = async (id) => {
     try {
-      const token = localStorage.getItem('token')
+      
       await axios.post(`${baseUrl}/posts/${id}/dislike`, null, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getAuthToken}`,
         },
       });
       getPosts();
@@ -126,13 +124,12 @@ export default function Home() {
       const content = commentInputs[id];
       if (!content) return;
 
-      const token = getAuthToken();
       await axios.post(
         `${baseUrl}/posts/${id}/comment`,
         { content },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${getAuthToken}`,
           },
         }
       );
