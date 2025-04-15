@@ -1,31 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { IoChatbubbleEllipsesSharp, IoSend } from 'react-icons/io5';
-import { AiOutlineClose } from 'react-icons/ai';
-import { BiLike, BiDislike, BiComment } from 'react-icons/bi';
-import PostLoader from '../Components/PostLoader';
-import CreatePost from '../Components/CreatePost';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { IoChatbubbleEllipsesSharp, IoSend } from "react-icons/io5";
+import { AiOutlineClose } from "react-icons/ai";
+import { BiLike, BiDislike, BiComment } from "react-icons/bi";
+import PostLoader from "../Components/PostLoader";
+import CreatePost from "../Components/CreatePost";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
-  const [expandId, setExpandId] = useState('');
+  const [expandId, setExpandId] = useState("");
   const [loading, setLoading] = useState(true);
-  const [searchInput, setSearchInput] = useState('');
+  const [searchInput, setSearchInput] = useState("");
   const [showChat, setShowChat] = useState(false);
-  const [chatInput, setChatInput] = useState('');
+  const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([
-    { role: 'system', content: 'You are a helpful assistant.' }
+    { role: "system", content: "You are a helpful assistant." },
   ]);
   const [commentInputs, setCommentInputs] = useState({});
+  const [chatLoading, setChatLoading] = useState(false);
   const [visibleComments, setVisibleComments] = useState({});
+  const [likedPosts, setLikedPosts] = useState(new Set());
+  const [dislikedPosts, setDislikedPosts] = useState(new Set());
   const baseUrl = process.env.REACT_APP_BASE_URL;
-
-  // Function to get the token from localStorage
-  const getAuthToken = localStorage.getItem('token');
-  
+  const getAuthToken = localStorage.getItem("token");
 
   useEffect(() => {
     getPosts();
@@ -33,12 +33,9 @@ export default function Home() {
 
   const getPosts = async () => {
     try {
-      
       const response = await axios.get(`${baseUrl}/posts`, {
         params: { query: searchInput },
-        headers: {
-          Authorization: `Bearer ${getAuthToken}`,
-        },
+        headers: { Authorization: `Bearer ${getAuthToken}` },
       });
       setPosts(response?.data);
       setLoading(false);
@@ -67,38 +64,45 @@ export default function Home() {
   const sendMessage = async () => {
     if (!chatInput.trim()) return;
 
-    const updatedMessages = [...chatMessages, { role: 'user', content: chatInput }];
+    const updatedMessages = [
+      ...chatMessages,
+      { role: "user", content: chatInput },
+    ];
     setChatMessages(updatedMessages);
-    setChatInput('');
-
+    setChatInput("");
+    setChatLoading(true);
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-pro-latest",
+      });
 
       const chat = model.startChat({
         history: updatedMessages
-          .filter((m) => m.role !== 'system')
+          .filter((m) => m.role !== "system")
           .map((m) => ({ role: m.role, parts: [{ text: m.content }] })),
       });
 
       const result = await chat.sendMessage(chatInput);
       const reply = result.response.text();
 
-      setChatMessages([...updatedMessages, { role: 'model', content: reply }]);
+      setChatMessages([...updatedMessages, { role: "model", content: reply }]);
     } catch (err) {
       console.error(err);
-      setChatMessages([...updatedMessages, { role: 'model', content: 'Sorry, something went wrong.' }]);
+      setChatMessages([
+        ...updatedMessages,
+        { role: "model", content: "Sorry, something went wrong." },
+      ]);
     }
   };
 
   const handleLike = async (id) => {
     try {
-     
       await axios.post(`${baseUrl}/posts/${id}/like`, null, {
-        headers: {
-          Authorization: `Bearer ${getAuthToken}`,
-        },
+        headers: { Authorization: `Bearer ${getAuthToken}` },
       });
+      setLikedPosts(new Set(likedPosts).add(id));
+      setDislikedPosts((prev) => new Set([...prev].filter((postId) => postId !== id)));
       getPosts();
     } catch (err) {
       console.error(err);
@@ -107,12 +111,11 @@ export default function Home() {
 
   const handleDislike = async (id) => {
     try {
-      
       await axios.post(`${baseUrl}/posts/${id}/dislike`, null, {
-        headers: {
-          Authorization: `Bearer ${getAuthToken}`,
-        },
+        headers: { Authorization: `Bearer ${getAuthToken}` },
       });
+      setDislikedPosts(new Set(dislikedPosts).add(id));
+      setLikedPosts((prev) => new Set([...prev].filter((postId) => postId !== id)));
       getPosts();
     } catch (err) {
       console.error(err);
@@ -128,12 +131,10 @@ export default function Home() {
         `${baseUrl}/posts/${id}/comment`,
         { content },
         {
-          headers: {
-            Authorization: `Bearer ${getAuthToken}`,
-          },
+          headers: { Authorization: `Bearer ${getAuthToken}` },
         }
       );
-      setCommentInputs((prev) => ({ ...prev, [id]: '' }));
+      setCommentInputs((prev) => ({ ...prev, [id]: "" }));
       getPosts();
     } catch (err) {
       console.error(err);
@@ -141,15 +142,15 @@ export default function Home() {
   };
 
   return (
-    <div style={{ height: 'auto' }}>
+    <div className="dark:bg-gray-900 dark:text-white min-h-screen">
       <CreatePost getPosts={getPosts} />
 
       {/* Desktop search */}
-      <div className="mt-3 p-5 fixed top-16 bg-white left-52 w-[70.5%] lg:visible invisible">
+      <div className="mt-3 p-5 fixed top-16 bg-white dark:bg-gray-900 left-52 w-[70.5%] lg:visible invisible">
         <input
           type="text"
           placeholder="Search ..."
-          className="border-b border-b-primaryColor w-full px-2 py-1 outline-none"
+          className="border-b border-b-primaryColor w-full px-2 py-1 outline-none bg-transparent text-inherit"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />
@@ -160,11 +161,11 @@ export default function Home() {
       ) : (
         <div className="mt-20">
           {/* Mobile search */}
-          <div className="pt-4 bg-white fixed top-2 w-full mt-10 lg:invisible visible">
+          <div className="pt-4 bg-white dark:bg-gray-800 fixed top-2 w-full mt-10 lg:invisible visible">
             <input
               type="text"
               placeholder="Search ..."
-              className="border-b border-b-primaryColor w-full px-2 py-1 outline-none"
+              className="border-b border-b-primaryColor w-full px-2 py-1 outline-none bg-transparent text-inherit"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -173,7 +174,7 @@ export default function Home() {
           {posts.map((post) => (
             <div
               key={post._id}
-              className="border lg:w-[70%] w-full m-auto flex flex-col justify-center my-3 p-3 lg:mt-3 mt-14"
+              className="border dark:border-gray-700 lg:w-[70%] w-full m-auto flex flex-col justify-center my-3 p-3 lg:mt-3 mt-14 bg-white dark:bg-gray-900 rounded"
             >
               <div className="flex items-center mb-3 gap-3">
                 <div className="rounded-full w-[70px] h-[70px] overflow-hidden p-1 shadow-md">
@@ -185,10 +186,12 @@ export default function Home() {
                 <div>
                   <h3 className="font-bold text-[#24919B]">{post?.title}</h3>
                   <p className="text-sm text-gray-400">
-                    by {post?.author?.name}{' '}
+                    by {post?.author?.name}{" "}
                     <span className="text-primaryColor">({post?.catagory})</span>
                   </p>
-                  <p className="text-xs text-gray-400">{formatTimeAgo(post?.createdAt)}</p>
+                  <p className="text-xs text-gray-400">
+                    {formatTimeAgo(post?.createdAt)}
+                  </p>
                 </div>
               </div>
 
@@ -203,10 +206,10 @@ export default function Home() {
                     <span
                       className="text-blue-500 cursor-pointer"
                       onClick={() =>
-                        setExpandId(expandId !== post._id ? post._id : '')
+                        setExpandId(expandId !== post._id ? post._id : "")
                       }
                     >
-                      {expandId === post._id ? ' See less...' : ' See more...'}
+                      {expandId === post._id ? " See less..." : " See more..."}
                     </span>
                   )}
                 </p>
@@ -214,16 +217,20 @@ export default function Home() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-6 mt-4 text-gray-600 items-center">
+              <div className="flex gap-6 mt-4 text-gray-600 dark:text-gray-300 items-center">
                 <button
                   onClick={() => handleLike(post._id)}
-                  className="flex items-center gap-1 hover:text-blue-600"
+                  className={`flex items-center gap-1 hover:text-blue-600 transition-transform ${
+                    likedPosts.has(post._id) ? "scale-110 text-blue-600" : ""
+                  }`}
                 >
                   <BiLike /> {post.likes?.length || 0}
                 </button>
                 <button
                   onClick={() => handleDislike(post._id)}
-                  className="flex items-center gap-1 hover:text-red-600"
+                  className={`flex items-center gap-1 hover:text-red-600 transition-transform ${
+                    dislikedPosts.has(post._id) ? "scale-110 text-red-600" : ""
+                  }`}
                 >
                   <BiDislike /> {post.dislikes?.length || 0}
                 </button>
@@ -244,16 +251,19 @@ export default function Home() {
               {visibleComments[post._id] && (
                 <div className="mt-3 space-y-2">
                   {post.comments?.map((c, i) => (
-                    <div key={i} className="bg-gray-100 p-2 rounded text-sm">
-                      <strong>{c.user?.name || 'Anonymous'}:</strong> {c.content}
+                    <div
+                      key={i}
+                      className="bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm"
+                    >
+                      <strong>{c.author?.name || "Anonymous"}:</strong> {c.content}
                     </div>
                   ))}
                   <div className="flex gap-2 mt-2">
                     <input
                       type="text"
-                      className="border flex-1 px-2 py-1 text-sm"
+                      className="border flex-1 px-2 py-1 text-sm bg-transparent dark:border-gray-600"
                       placeholder="Add a comment..."
-                      value={commentInputs[post._id] || ''}
+                      value={commentInputs[post._id] || ""}
                       onChange={(e) =>
                         setCommentInputs((prev) => ({
                           ...prev,
@@ -286,7 +296,7 @@ export default function Home() {
 
       {/* 🧠 Chat Window */}
       {showChat && (
-        <div className="fixed bottom-20 right-6 w-80 max-h-[70vh] bg-white border rounded-lg shadow-xl flex flex-col overflow-hidden">
+        <div className="fixed bottom-20 right-6 w-80 max-h-[70vh] bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-xl flex flex-col overflow-hidden">
           <div className="flex justify-between items-center px-4 py-2 bg-[#10A37F] text-white">
             <p>Ask AI</p>
             <AiOutlineClose
@@ -299,26 +309,28 @@ export default function Home() {
               <div
                 key={i}
                 className={`p-2 rounded-md ${
-                  msg.role === 'user'
-                    ? 'bg-blue-100 self-end text-right'
-                    : 'bg-gray-200 self-start'
+                  msg.role === "user"
+                    ? "bg-blue-100 dark:bg-blue-900 self-end text-right"
+                    : "bg-gray-200 dark:bg-gray-700 self-start"
                 }`}
               >
                 {msg.content}
               </div>
             ))}
           </div>
-          <div className="flex items-center border-t px-2 py-2">
+          <div className="flex items-center border-t px-2 py-2 dark:border-gray-600">
             <input
               type="text"
-              placeholder="Type something..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              className="flex-1 outline-none text-sm px-2"
+              className="w-full px-2 py-1 rounded-md bg-transparent text-sm border dark:border-gray-600"
+              placeholder="Type a message..."
             />
-            <button onClick={sendMessage} className="text-[#10A37F]">
-              <IoSend size={20} />
+            <button
+              onClick={sendMessage}
+              className="ml-2 bg-[#10A37F] text-white p-2 rounded-full"
+            >
+              {chatLoading ? "..." : <IoSend />}
             </button>
           </div>
         </div>

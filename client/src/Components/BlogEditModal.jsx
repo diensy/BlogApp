@@ -12,7 +12,6 @@ const BlogEditModal = ({ isOpen, onClose, BlogId, getPosts }) => {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-    
         if (BlogId?.image) {
             setImage(BlogId?.image);
         }
@@ -49,14 +48,14 @@ const BlogEditModal = ({ isOpen, onClose, BlogId, getPosts }) => {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setImage(reader.result); // Set the image preview as base64
+                setImage(reader.result);
             };
             reader.readAsDataURL(file);
         }
     };
 
     const handleImageRemove = () => {
-        setImage(null); // Remove the image preview
+        setImage(null);
     };
 
     return (
@@ -64,32 +63,31 @@ const BlogEditModal = ({ isOpen, onClose, BlogId, getPosts }) => {
             <Toaster />
             {isOpen && (
                 <div className="z-50 fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-4 rounded-md w-full max-w-lg">
-                        <label className="block mb-2 font-bold text-gray-800">Edit Value:</label>
+                    <div className="bg-white dark:bg-slate-800 text-black dark:text-white p-4 rounded-md w-full max-w-lg transition-colors duration-300">
+                        <label className="block mb-2 font-bold text-gray-800 dark:text-white">Edit Value:</label>
                         <input
                             type="text"
                             defaultValue={BlogId?.title}
                             placeholder="Title"
                             onChange={(e) => setTitle(e.target.value)}
-                            className="border rounded-md p-2 w-full mb-4"
+                            className="border rounded-md p-2 w-full mb-4 bg-white dark:bg-slate-700 dark:text-white"
                         />
                         <textarea
                             type="text"
                             defaultValue={BlogId?.description}
                             placeholder="Descriptions..."
                             onChange={(e) => setDescription(e.target.value)}
-                            className="border rounded-md p-2 w-full mb-4"
+                            className="border rounded-md p-2 w-full mb-4 bg-white dark:bg-slate-700 dark:text-white"
                         />
                         
-                        {/* Image Preview Section */}
                         <div className="mb-4">
-                            <label className="block mb-2 font-bold text-gray-800">Image</label>
+                            <label className="block mb-2 font-bold text-gray-800 dark:text-white">Image</label>
                             {image ? (
                                 <div className="relative mb-4">
                                     <img
                                         src={image}
                                         alt="Blog"
-                                        className="w-full h-48 object-cover border-2 border-dashed border-gray-400"
+                                        className="w-full h-48 object-cover border-2 border-dashed border-gray-400 dark:border-gray-600"
                                     />
                                     <button
                                         onClick={handleImageRemove}
@@ -99,24 +97,22 @@ const BlogEditModal = ({ isOpen, onClose, BlogId, getPosts }) => {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="w-full h-48 border-2 border-dashed border-gray-400 flex justify-center items-center">
-                                    <span className="text-gray-500">No image selected</span>
+                                <div className="w-full h-48 border-2 border-dashed border-gray-400 dark:border-gray-600 flex justify-center items-center">
+                                    <span className="text-gray-500 dark:text-gray-300">No image selected</span>
                                 </div>
                             )}
-                            {/* Show file input only when there is no image */}
                             {!image && (
                                 <input
                                     type="file"
                                     onChange={handleImageChange}
-                                    className="mt-2 w-full border p-2 rounded-md"
+                                    className="mt-2 w-full border p-2 rounded-md bg-white dark:bg-slate-700 dark:text-white"
                                 />
                             )}
                         </div>
-                        
-                        {/* Category Selection */}
+
                         <select
                             name="catagory"
-                            className="border rounded-md p-2 w-full mb-4"
+                            className="border rounded-md p-2 w-full mb-4 bg-white dark:bg-slate-700 dark:text-white"
                             defaultValue={BlogId?.catagory}
                             onChange={(e) => setCatagory(e.target.value)}
                         >
@@ -133,7 +129,6 @@ const BlogEditModal = ({ isOpen, onClose, BlogId, getPosts }) => {
                             <option value="hollywood">Hollywood</option>
                         </select>
 
-                        {/* Save and Cancel Buttons */}
                         <div className="flex justify-end">
                             <button
                                 className="bg-primaryColor text-white px-4 py-2 rounded-md mr-2"
@@ -143,7 +138,7 @@ const BlogEditModal = ({ isOpen, onClose, BlogId, getPosts }) => {
                                 {loading ? 'Updating...' : 'Update'}
                             </button>
                             <button
-                                className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md"
+                                className="bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-4 py-2 rounded-md"
                                 onClick={onClose}
                             >
                                 Cancel
